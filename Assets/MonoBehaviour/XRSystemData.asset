@@ -9,9 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f27eb8e03fc7f81416debdf831aa759e, type: 3}
+  m_Script: {fileID: 11500000, guid: 307a736764ebbce44b54d72f8467b6fd, type: 3}
   m_Name: XRSystemData
   m_EditorClassIdentifier:
   shaders:
     xrOcclusionMeshPS: {fileID: 4800000, guid: 13d54d0411401ba48a19326d8252d658, type: 3}
     xrMirrorViewPS: {fileID: 4800000, guid: b6980db87361afd46a7a4214c2460183, type: 3}
+

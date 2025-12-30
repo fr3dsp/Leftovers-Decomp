@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d9820a0a9a4468ef64d46ba5ce96c5a, type: 3}
+  m_Script: {fileID: 11500000, guid: 572910c10080c0945a0ef731ccedc739, type: 3}
   m_Name: PostProcessData
   m_EditorClassIdentifier:
   shaders:
@@ -71,3 +71,4 @@ MonoBehaviour:
     - {fileID: 2800000, guid: 199a5cbbfbe57d748a023a849d6a9269, type: 3}
     smaaAreaTex: {fileID: 2800000, guid: 0de97588deb83744391c0920fd7d6ffe, type: 3}
     smaaSearchTex: {fileID: 2800000, guid: af0c6cc3edb301b49b6c5fa0e8f92720, type: 3}
+

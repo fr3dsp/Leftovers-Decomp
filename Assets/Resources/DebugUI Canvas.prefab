@@ -69,7 +69,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1941071341496729}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6dfc8ec6aebac6665d9781d273993f23, type: 3}
+  m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name:
   m_EditorClassIdentifier:
   m_UiScaleMode: 0
@@ -92,7 +92,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1941071341496729}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86fe8f3fc59dc06ea6b45a1bbee64682, type: 3}
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
   m_Name:
   m_EditorClassIdentifier:
   m_IgnoreReversedGraphics: 1
@@ -109,7 +109,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1941071341496729}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c26151dd1dc9ff21c808d7cc0dc27af, type: 3}
+  m_Script: {fileID: 11500000, guid: 76db615e524a19c4990482d75a475543, type: 3}
   m_Name:
   m_EditorClassIdentifier:
   panelPrefab: {fileID: 224594231899602545, guid: 464b8cb8cd8707047b003c86483beee1, type: 2}
@@ -154,3 +154,6 @@ MonoBehaviour:
     prefab: {fileID: 224176081384838266, guid: 4389f06b6cde570478e45cff8fb74f12, type: 2}
   - type: UnityEngine.Rendering.DebugUI+Table+Row, Unity.RenderPipelines.Core.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     prefab: {fileID: 224846875517176660, guid: ed5e718cbf539584fb715202d8693ada, type: 2}
+
+
+

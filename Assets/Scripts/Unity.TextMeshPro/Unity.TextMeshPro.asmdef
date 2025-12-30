@@ -1,7 +1,0 @@
-{
-  "name": "Unity.TextMeshPro",
-  "references": [
-    "UnityEngine.UI"
-  ],
-  "allowUnsafeCode": true
-}

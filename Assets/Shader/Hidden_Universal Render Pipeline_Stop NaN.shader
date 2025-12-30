@@ -1,43 +1,45 @@
-Shader "Hidden/Universal Render Pipeline/Stop NaN" {
-	Properties {
-	}
-	//DummyShaderTextExporter
-	SubShader{
-		Tags { "RenderType" = "Opaque" }
-		LOD 200
+Shader "Hidden/Universal Render Pipeline/Stop NaN"
+{
+    HLSLINCLUDE
+        #pragma exclude_renderers gles
+        #pragma multi_compile _ _USE_DRAW_PROCEDURAL
+        #pragma exclude_renderers gles
+        #pragma target 3.5
 
-		Pass
-		{
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
+        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+        #include "Packages/com.unity.render-pipelines.universal/Shaders/PostProcessing/Common.hlsl"
 
-			float4x4 unity_ObjectToWorld;
-			float4x4 unity_MatrixVP;
+        #define NAN_COLOR half3(0.0, 0.0, 0.0)
 
-			struct Vertex_Stage_Input
-			{
-				float4 pos : POSITION;
-			};
+        TEXTURE2D_X(_SourceTex);
 
-			struct Vertex_Stage_Output
-			{
-				float4 pos : SV_POSITION;
-			};
+        half4 Frag(Varyings input) : SV_Target
+        {
+            UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+            half3 color = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_PointClamp, UnityStereoTransformScreenSpaceTex(input.uv)).xyz;
 
-			Vertex_Stage_Output vert(Vertex_Stage_Input input)
-			{
-				Vertex_Stage_Output output;
-				output.pos = mul(unity_MatrixVP, mul(unity_ObjectToWorld, input.pos));
-				return output;
-			}
+            if (AnyIsNaN(color) || AnyIsInf(color))
+                color = NAN_COLOR;
 
-			float4 frag(Vertex_Stage_Output input) : SV_TARGET
-			{
-				return float4(1.0, 1.0, 1.0, 1.0); // RGBA
-			}
+            return half4(color, 1.0);
+        }
 
-			ENDHLSL
-		}
-	}
+    ENDHLSL
+
+    SubShader
+    {
+        Tags { "RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline"}
+        LOD 100
+        ZTest Always ZWrite Off Cull Off
+
+        Pass
+        {
+            Name "Stop NaN"
+
+            HLSLPROGRAM
+                #pragma vertex FullscreenVert
+                #pragma fragment Frag
+            ENDHLSL
+        }
+    }
 }

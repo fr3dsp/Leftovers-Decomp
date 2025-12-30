@@ -1,43 +1,42 @@
-Shader "Hidden/Universal Render Pipeline/Blit" {
-	Properties {
-	}
-	//DummyShaderTextExporter
-	SubShader{
-		Tags { "RenderType" = "Opaque" }
-		LOD 200
+Shader "Hidden/Universal Render Pipeline/Blit"
+{
+    SubShader
+    {
+        Tags { "RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline"}
+        LOD 100
 
-		Pass
-		{
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
+        Pass
+        {
+            Name "Blit"
+            ZTest Always
+            ZWrite Off
+            Cull Off
 
-			float4x4 unity_ObjectToWorld;
-			float4x4 unity_MatrixVP;
+            HLSLPROGRAM
+            #pragma vertex FullscreenVert
+            #pragma fragment Fragment
+            #pragma multi_compile_fragment _ _LINEAR_TO_SRGB_CONVERSION
+            #pragma multi_compile _ _USE_DRAW_PROCEDURAL
 
-			struct Vertex_Stage_Input
-			{
-				float4 pos : POSITION;
-			};
+            #include "Packages/com.unity.render-pipelines.universal/Shaders/Utils/Fullscreen.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 
-			struct Vertex_Stage_Output
-			{
-				float4 pos : SV_POSITION;
-			};
+            TEXTURE2D_X(_SourceTex);
+            SAMPLER(sampler_SourceTex);
 
-			Vertex_Stage_Output vert(Vertex_Stage_Input input)
-			{
-				Vertex_Stage_Output output;
-				output.pos = mul(unity_MatrixVP, mul(unity_ObjectToWorld, input.pos));
-				return output;
-			}
+            half4 Fragment(Varyings input) : SV_Target
+            {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-			float4 frag(Vertex_Stage_Output input) : SV_TARGET
-			{
-				return float4(1.0, 1.0, 1.0, 1.0); // RGBA
-			}
+                half4 col = SAMPLE_TEXTURE2D_X(_SourceTex, sampler_SourceTex, input.uv);
 
-			ENDHLSL
-		}
-	}
+             #ifdef _LINEAR_TO_SRGB_CONVERSION
+                col = LinearToSRGB(col);
+             #endif
+
+                return col;
+            }
+            ENDHLSL
+        }
+    }
 }

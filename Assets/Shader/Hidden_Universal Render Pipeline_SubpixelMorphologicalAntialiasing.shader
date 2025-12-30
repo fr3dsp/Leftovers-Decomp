@@ -1,45 +1,74 @@
-Shader "Hidden/Universal Render Pipeline/SubpixelMorphologicalAntialiasing" {
-	Properties {
-		[HideInInspector] _StencilRef ("_StencilRef", Float) = 64
-		[HideInInspector] _StencilMask ("_StencilMask", Float) = 64
-	}
-	//DummyShaderTextExporter
-	SubShader{
-		Tags { "RenderType" = "Opaque" }
-		LOD 200
+Shader "Hidden/Universal Render Pipeline/SubpixelMorphologicalAntialiasing"
+{
+    Properties
+    {
+        [HideInInspector] _StencilRef ("_StencilRef", Int) = 64
+        [HideInInspector] _StencilMask ("_StencilMask", Int) = 64
+    }
 
-		Pass
-		{
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
+    HLSLINCLUDE
 
-			float4x4 unity_ObjectToWorld;
-			float4x4 unity_MatrixVP;
+        #pragma multi_compile_local _SMAA_PRESET_LOW _SMAA_PRESET_MEDIUM _SMAA_PRESET_HIGH
+        #pragma multi_compile _ _USE_DRAW_PROCEDURAL
+        #pragma exclude_renderers gles
 
-			struct Vertex_Stage_Input
-			{
-				float4 pos : POSITION;
-			};
+    ENDHLSL
 
-			struct Vertex_Stage_Output
-			{
-				float4 pos : SV_POSITION;
-			};
+    SubShader
+    {
+        Cull Off ZWrite Off ZTest Always
 
-			Vertex_Stage_Output vert(Vertex_Stage_Input input)
-			{
-				Vertex_Stage_Output output;
-				output.pos = mul(unity_MatrixVP, mul(unity_ObjectToWorld, input.pos));
-				return output;
-			}
+        // Edge detection 
+        Pass
+        {
+            Stencil
+            {
+                WriteMask [_StencilMask]
+                Ref [_StencilRef]
+                Comp Always
+                Pass Replace
+            }
 
-			float4 frag(Vertex_Stage_Output input) : SV_TARGET
-			{
-				return float4(1.0, 1.0, 1.0, 1.0); // RGBA
-			}
+            HLSLPROGRAM
 
-			ENDHLSL
-		}
-	}
+                #pragma vertex VertEdge
+                #pragma fragment FragEdge
+                #include "SubpixelMorphologicalAntialiasingBridge.hlsl"
+
+            ENDHLSL
+        }
+
+        // Blend Weights Calculation
+        Pass
+        {
+            Stencil
+            {
+                WriteMask [_StencilMask]
+                ReadMask [_StencilMask]
+                Ref [_StencilRef]
+                Comp Equal
+                Pass Replace
+            }
+
+            HLSLPROGRAM
+
+                #pragma vertex VertBlend
+                #pragma fragment FragBlend
+                #include "SubpixelMorphologicalAntialiasingBridge.hlsl"
+
+            ENDHLSL
+        }
+
+        // Neighborhood Blending
+        Pass
+        {
+            HLSLPROGRAM
+
+                #pragma vertex VertNeighbor
+                #pragma fragment FragNeighbor
+                #include "SubpixelMorphologicalAntialiasingBridge.hlsl"
+
+            ENDHLSL
+        }
+    }
 }

@@ -1,43 +1,41 @@
-Shader "Hidden/Universal Render Pipeline/XR/XRMirrorView" {
-	Properties {
-	}
-	//DummyShaderTextExporter
-	SubShader{
-		Tags { "RenderType" = "Opaque" }
-		LOD 200
+Shader "Hidden/Universal Render Pipeline/XR/XRMirrorView"
+{
+    SubShader
+    {
+        Tags{ "RenderPipeline" = "UniversalPipeline" }
 
-		Pass
-		{
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
+        HLSLINCLUDE
+            #pragma exclude_renderers gles
+        ENDHLSL
 
-			float4x4 unity_ObjectToWorld;
-			float4x4 unity_MatrixVP;
+        // 0: TEXTURE2D
+        Pass
+        {
+            ZWrite Off ZTest Always Blend Off Cull Off
 
-			struct Vertex_Stage_Input
-			{
-				float4 pos : POSITION;
-			};
+            HLSLPROGRAM
+                #pragma vertex VertQuad
+                #pragma fragment FragBilinear
 
-			struct Vertex_Stage_Output
-			{
-				float4 pos : SV_POSITION;
-			};
+                #define SRC_TEXTURE2D_X_ARRAY 0
+                #include "Packages/com.unity.render-pipelines.universal/Shaders/XR/XRMirrorView.hlsl"
+            ENDHLSL
+        }
 
-			Vertex_Stage_Output vert(Vertex_Stage_Input input)
-			{
-				Vertex_Stage_Output output;
-				output.pos = mul(unity_MatrixVP, mul(unity_ObjectToWorld, input.pos));
-				return output;
-			}
+        // 1: TEXTURE2D_ARRAY
+        Pass
+        {
+            ZWrite Off ZTest Always Blend Off Cull Off
 
-			float4 frag(Vertex_Stage_Output input) : SV_TARGET
-			{
-				return float4(1.0, 1.0, 1.0, 1.0); // RGBA
-			}
+            HLSLPROGRAM
+                #pragma vertex VertQuad
+                #pragma fragment FragBilinear
 
-			ENDHLSL
-		}
-	}
+                #define SRC_TEXTURE2D_X_ARRAY 1
+                #include "Packages/com.unity.render-pipelines.universal/Shaders/XR/XRMirrorView.hlsl"
+            ENDHLSL
+        }
+    }
+
+    Fallback Off
 }
