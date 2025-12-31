@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -7,7 +7,6 @@ namespace Leftovers.Neighbour
 	[Serializable]
 	public struct DialogueLine
 	{
-		[TextArea]
 		public string message;
 
 		public string animationBody;

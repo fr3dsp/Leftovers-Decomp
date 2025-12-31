@@ -1,50 +1,77 @@
-using System.Collections;
+﻿using System.Collections;
 using TMPro;
 using UnityEngine;
 
 namespace Leftovers.UI
 {
-	public class LeftoverCounter : MonoBehaviour
-	{
-		[SerializeField]
-		private Color originalColor;
+    public class LeftoverCounter : MonoBehaviour
+    {
+        [SerializeField] private Color originalColor = Color.white;
+        [SerializeField] private Color flashColor = Color.yellow;
+        [SerializeField] private Color endColor = Color.gray;
 
-		[SerializeField]
-		private Color flashColor;
+        [SerializeField] private float originalSize = 36f;
+        [SerializeField] private float flashSize = 42f;
+        [SerializeField] private float flashDuration = 0.25f;
+        [SerializeField] private float returnDuration = 0.25f;
 
-		[SerializeField]
-		private Color endColor;
+        [SerializeField] private string endCounter = "End";
+        [SerializeField] private string startCounter = "Start";
 
-		[SerializeField]
-		private float originalSize;
+        [SerializeField] private TMP_Text textCounter;
 
-		[SerializeField]
-		private float flashSize;
+        private Coroutine flashCoroutine;
 
-		[SerializeField]
-		private float flashDuration;
+        public void SetCounter(string text)
+        {
+            if (textCounter == null)
+                return;
 
-		[SerializeField]
-		private float returnDuration;
+            textCounter.text = text;
 
-		[SerializeField]
-		private string endCounter;
+            if (flashCoroutine != null)
+            {
+                StopCoroutine(flashCoroutine);
+                flashCoroutine = null;
+            }
 
-		[SerializeField]
-		private string startCounter;
+            if (text == endCounter)
+            {
+                flashCoroutine = StartCoroutine(FlashText(flashColor, endColor));
+            }
+            else if (text != startCounter)
+            {
+                flashCoroutine = StartCoroutine(FlashText(flashColor, originalColor));
+            }
+        }
 
-		[SerializeField]
-		private TMP_Text textCounter;
+        private IEnumerator FlashText(Color startColor, Color targetColor)
+        {
+            float timer = 0f;
 
-		private Coroutine flashCoroutine;
+            textCounter.fontSize = flashSize;
+            textCounter.color = startColor;
 
-		public void SetCounter(string text)
-		{
-		}
+            while (timer < flashDuration)
+            {
+                timer += Time.deltaTime;
+                yield return null;
+            }
 
-		private IEnumerator FlashText(Color startColor, Color endColor)
-		{
-			return null;
-		}
-	}
+            timer = 0f;
+
+            while (timer < returnDuration)
+            {
+                float t = timer / returnDuration;
+                textCounter.fontSize = Mathf.Lerp(flashSize, originalSize, t);
+                textCounter.color = Color.Lerp(startColor, targetColor, t);
+                timer += Time.deltaTime;
+                yield return null;
+            }
+
+            textCounter.fontSize = originalSize;
+            textCounter.color = targetColor;
+            flashCoroutine = null;
+        }
+    }
 }

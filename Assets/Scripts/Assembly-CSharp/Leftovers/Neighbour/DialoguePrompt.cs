@@ -1,16 +1,20 @@
-using System;
+﻿using System;
 
 namespace Leftovers.Neighbour
 {
-	[Serializable]
-	public class DialoguePrompt
-	{
-		public string name;
+    [Serializable]
+    public class DialoguePrompt
+    {
+        public DialoguePrompt()
+        {
+        }
 
-		public DialoguePromptOption optionNod;
+        public string name;
 
-		public DialoguePromptOption optionShake;
+        public DialoguePromptOption optionNod;
 
-		public DialoguePromptOption optionShowFood;
-	}
+        public DialoguePromptOption optionShake;
+
+        public DialoguePromptOption optionShowFood;
+    }
 }

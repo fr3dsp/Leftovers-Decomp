@@ -1,9 +1,11 @@
+﻿using System;
+
 namespace Leftovers.Utilities
 {
-	public enum TransitionType
+	public enum _TransitionType
 	{
-		FadeInAndOut = 0,
-		FadeOut = 1,
-		None = 2
+		FadeInAndOut,
+		FadeOut,
+		None
 	}
 }

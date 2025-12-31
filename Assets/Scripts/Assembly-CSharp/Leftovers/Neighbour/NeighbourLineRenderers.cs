@@ -1,24 +1,28 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Leftovers.Neighbour
 {
-	public class NeighbourLineRenderers : MonoBehaviour
-	{
-		[SerializeField]
-		private LineRenderer upperToFaceLine;
+    public class NeighbourLineRenderers : MonoBehaviour
+    {
+        [SerializeField] private LineRenderer upperToFaceLine;
+        [SerializeField] private Transform upperTop;
+        [SerializeField] private Transform faceBottom;
 
-		[SerializeField]
-		private Transform upperTop;
+        private void Start()
+        {
+            if (upperToFaceLine == null)
+                return;
 
-		[SerializeField]
-		private Transform faceBottom;
+            upperToFaceLine.positionCount = 2;
+        }
 
-		private void Start()
-		{
-		}
+        private void Update()
+        {
+            if (upperToFaceLine == null || upperTop == null || faceBottom == null)
+                return;
 
-		private void Update()
-		{
-		}
-	}
+            upperToFaceLine.SetPosition(0, upperTop.position);
+            upperToFaceLine.SetPosition(1, faceBottom.position);
+        }
+    }
 }

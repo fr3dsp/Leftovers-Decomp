@@ -1,31 +1,40 @@
+﻿using System;
 using UnityEngine;
 
 namespace Leftovers.Neighbour
 {
-	public class DoorSoundEffect : MonoBehaviour
-	{
-		[SerializeField]
-		private AudioSource audioSource;
+    public class DoorSoundEffect : MonoBehaviour
+    {
+        [SerializeField] private AudioSource audioSource;
+        [SerializeField] private AudioClip sfxDoorOpen;
+        [SerializeField] private AudioClip sfxDoorClose;
+        [SerializeField] private AudioClip sfxGrunt;
 
-		[SerializeField]
-		private AudioClip sfxDoorOpen;
+        public void PlayDoorOpen()
+        {
+            if (audioSource == null)
+                throw new NullReferenceException("AudioSource is not assigned.");
 
-		[SerializeField]
-		private AudioClip sfxDoorClose;
+            if (sfxDoorOpen != null)
+                audioSource.PlayOneShot(sfxDoorOpen);
+        }
 
-		[SerializeField]
-		private AudioClip sfxGrunt;
+        public void PlayDoorClose()
+        {
+            if (audioSource == null)
+                throw new NullReferenceException("AudioSource is not assigned.");
 
-		public void PlayDoorOpen()
-		{
-		}
+            if (sfxDoorClose != null)
+                audioSource.PlayOneShot(sfxDoorClose);
+        }
 
-		public void PlayDoorClose()
-		{
-		}
+        public void PlayGrunt()
+        {
+            if (audioSource == null)
+                throw new NullReferenceException("AudioSource is not assigned.");
 
-		public void PlayGrunt()
-		{
-		}
-	}
+            if (sfxGrunt != null)
+                audioSource.PlayOneShot(sfxGrunt);
+        }
+    }
 }

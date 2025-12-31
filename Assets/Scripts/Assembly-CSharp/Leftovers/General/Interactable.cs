@@ -1,30 +1,47 @@
+﻿using System;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace Leftovers.General
 {
-	public class Interactable : Hoverable
-	{
-		[SerializeField]
-		private UnityEvent onStartInteract;
+    public class Interactable : Hoverable
+    {
+        [SerializeField] private InteractionAnimationType animationType = InteractionAnimationType.None;
+        [SerializeField] private bool lockInteraction;
+        public float animationDuration = 1f;
 
-		[SerializeField]
-		private UnityEvent onStopInteract;
+        [SerializeField] private UnityEvent onStartInteract = new UnityEvent();
+        [SerializeField] private UnityEvent onStopInteract = new UnityEvent();
 
-		[SerializeField]
-		private InteractionAnimationType animationType;
+        public InteractionAnimationType AnimationType => animationType;
+        public float AnimationDuration => animationDuration;
 
-		[SerializeField]
-		private bool lockInteraction;
+        public void StartInteract()
+        {
+            if (lockInteraction)
+            {
+                var interactor = Interactor.Instance;
+                if (interactor != null)
+                {
+                    interactor.LockInteraction();
+                }
+            }
 
-		public InteractionAnimationType AnimationType => default(InteractionAnimationType);
+            onStartInteract?.Invoke();
+        }
 
-		public void StartInteract()
-		{
-		}
+        public void StopInteract()
+        {
+            if (lockInteraction)
+            {
+                var interactor = Interactor.Instance;
+                if (interactor != null)
+                {
+                    interactor.UnlockInteraction();
+                }
+            }
 
-		public void StopInteract()
-		{
-		}
-	}
+            onStopInteract?.Invoke();
+        }
+    }
 }

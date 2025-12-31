@@ -1,87 +1,131 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 namespace Leftovers.General
 {
-	public class Interactor : MonoBehaviour
-	{
-		private static readonly int HashTriggerKnock;
+    public class Interactor : MonoBehaviour
+    {
+        public static Interactor Instance { get; private set; }
 
-		private static Interactor instance;
+        [SerializeField] private float raycastDistance = 3f;
+        [SerializeField] private LayerMask raycastMask;
+        [SerializeField] private Animator animator;
+        [SerializeField] private Camera cameraRaycast;
+        [SerializeField] private GameObject cursor;
 
-		[SerializeField]
-		private float raycastDistance;
+        private Vector3 screenCenter;
+        private bool lockedInteraction;
+        private Hoverable currentDetectedObject;
 
-		[SerializeField]
-		private LayerMask raycastMask;
+        private static readonly int HashTriggerKnock = Animator.StringToHash("Knock");
 
-		[SerializeField]
-		private Animator animator;
+        private void Awake()
+        {
+            Instance = this;
+        }
 
-		[SerializeField]
-		private Camera cameraRaycast;
+        private void Start()
+        {
+            screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
+        }
 
-		[SerializeField]
-		private GameObject cursor;
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
+        }
 
-		private Vector3 screenCenter;
+        private void Update()
+        {
+            if (cursor != null)
+                cursor.SetActive(!lockedInteraction);
 
-		private RaycastHit hitInfo;
+            if (lockedInteraction || cameraRaycast == null)
+                return;
 
-		private bool lockedInteraction;
+            Hoverable hoverable = null;
+            Ray ray = cameraRaycast.ScreenPointToRay(screenCenter);
 
-		private Hoverable currentDetectedObject;
+            if (Physics.Raycast(ray, out RaycastHit hit, raycastDistance, raycastMask))
+            {
+                if (hit.collider != null)
+                    hoverable = hit.collider.GetComponent<Hoverable>();
+            }
 
-		public static Interactor Instance
-		{
-			get
-			{
-				return null;
-			}
-			set
-			{
-			}
-		}
+            HandleHoverable(hoverable);
 
-		private void Awake()
-		{
-		}
+            if (Input.GetMouseButtonDown(0))
+                HandleInteractable();
+        }
 
-		private void Start()
-		{
-		}
+        private void HandleHoverable(Hoverable hoverable)
+        {
+            if (currentDetectedObject == hoverable)
+                return;
 
-		private void OnDestroy()
-		{
-		}
+            if (currentDetectedObject != null)
+                currentDetectedObject.StopHover();
 
-		private void Update()
-		{
-		}
+            currentDetectedObject = hoverable;
 
-		private void HandleHoverable(Hoverable hoverable)
-		{
-		}
+            if (currentDetectedObject != null)
+                currentDetectedObject.StartHover();
+        }
 
-		private void HandleInteractable()
-		{
-		}
+        private void HandleInteractable()
+        {
+            if (currentDetectedObject == null)
+                return;
 
-		private void PlayAnimation(InteractionAnimationType animationType)
-		{
-		}
+            Interactable interactable = currentDetectedObject as Interactable;
+            if (interactable == null)
+                return;
 
-		private IEnumerator FinishAnimation(float duration)
-		{
-			return null;
-		}
+            LockInteraction();
+            interactable.StartInteract();
 
-		public void LockInteraction()
-		{
-		}
+            if (animator != null && interactable.AnimationType != InteractionAnimationType.None)
+            {
+                var player = Player.PlayerController.Instance;
+                if (player != null)
+                {
+                    player.handleKeyboardInput = false;
+                    Cursor.lockState = CursorLockMode.None;
+                }
 
-		public void UnlockInteraction()
-		{
-		}
-	}
+                animator.SetTrigger(HashTriggerKnock);
+                StartCoroutine(FinishAnimation(interactable.animationDuration));
+            }
+        }
+
+        private IEnumerator FinishAnimation(float duration)
+        {
+            yield return new WaitForSeconds(duration);
+
+            var player = Player.PlayerController.Instance;
+            if (player != null)
+            {
+                player.handleKeyboardInput = true;
+                Cursor.lockState = CursorLockMode.Locked;
+            }
+
+            UnlockInteraction();
+        }
+
+        public void LockInteraction()
+        {
+            lockedInteraction = true;
+
+            if (currentDetectedObject != null)
+            {
+                currentDetectedObject.StopHover();
+                currentDetectedObject = null;
+            }
+        }
+
+        public void UnlockInteraction()
+        {
+            lockedInteraction = false;
+        }
+    }
 }
