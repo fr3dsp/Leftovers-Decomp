@@ -1,131 +1,169 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
+using Leftovers.Player;
 
 namespace Leftovers.General
 {
-    public class Interactor : MonoBehaviour
-    {
-        public static Interactor Instance { get; private set; }
+	public class Interactor : MonoBehaviour
+	{
+		private static readonly int HashTriggerKnock = Animator.StringToHash("Knock");
+		private static Interactor instance;
 
-        [SerializeField] private float raycastDistance = 3f;
-        [SerializeField] private LayerMask raycastMask;
-        [SerializeField] private Animator animator;
-        [SerializeField] private Camera cameraRaycast;
-        [SerializeField] private GameObject cursor;
+		[SerializeField]
+		private float raycastDistance;
 
-        private Vector3 screenCenter;
-        private bool lockedInteraction;
-        private Hoverable currentDetectedObject;
+		[SerializeField]
+		private LayerMask raycastMask;
 
-        private static readonly int HashTriggerKnock = Animator.StringToHash("Knock");
+		[SerializeField]
+		private Animator animator;
 
-        private void Awake()
-        {
-            Instance = this;
-        }
+		[SerializeField]
+		private Camera cameraRaycast;
 
-        private void Start()
-        {
-            screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
-        }
+		[SerializeField]
+		private GameObject cursor;
 
-        private void OnDestroy()
-        {
-            if (Instance == this)
-                Instance = null;
-        }
+		private Vector3 screenCenter;
+		private RaycastHit hitInfo;
+		public bool lockedInteraction;
+		public Hoverable currentDetectedObject;
 
-        private void Update()
-        {
-            if (cursor != null)
-                cursor.SetActive(!lockedInteraction);
+		public static Interactor Instance
+		{
+			get
+			{
+				return instance;
+			}
+			set
+			{
+				if (instance == null || value == null)
+				{
+					instance = value;
+				}
+				else
+				{
+					Destroy(value.gameObject);
+				}
+			}
+		}
 
-            if (lockedInteraction || cameraRaycast == null)
-                return;
+		public Interactor()
+		{
+			raycastDistance = 1.0f;
+			screenCenter = Vector3.zero;
+		}
 
-            Hoverable hoverable = null;
-            Ray ray = cameraRaycast.ScreenPointToRay(screenCenter);
+		private void Awake()
+		{
+			Instance = this;
+		}
 
-            if (Physics.Raycast(ray, out RaycastHit hit, raycastDistance, raycastMask))
-            {
-                if (hit.collider != null)
-                    hoverable = hit.collider.GetComponent<Hoverable>();
-            }
+		private void Start()
+		{
+			screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
+		}
 
-            HandleHoverable(hoverable);
+		private void OnDestroy()
+		{
+			Instance = null;
+		}
 
-            if (Input.GetMouseButtonDown(0))
-                HandleInteractable();
-        }
+		private void Update()
+		{
+			if (cursor != null)
+				cursor.SetActive(!lockedInteraction);
 
-        private void HandleHoverable(Hoverable hoverable)
-        {
-            if (currentDetectedObject == hoverable)
-                return;
+			if (lockedInteraction || cameraRaycast == null)
+				return;
 
-            if (currentDetectedObject != null)
-                currentDetectedObject.StopHover();
+			Ray screenRay = cameraRaycast.ScreenPointToRay(screenCenter);
+			Hoverable hoverableComponent = null;
 
-            currentDetectedObject = hoverable;
+			if (Physics.Raycast(screenRay, out hitInfo, raycastDistance, raycastMask))
+			{
+				Collider collider = hitInfo.collider;
+				if (collider != null)
+				{
+					GameObject go = collider.gameObject;
+					if (go != null)
+						hoverableComponent = go.GetComponent<Hoverable>();
+				}
+			}
 
-            if (currentDetectedObject != null)
-                currentDetectedObject.StartHover();
-        }
+			HandleHoverable(hoverableComponent);
 
-        private void HandleInteractable()
-        {
-            if (currentDetectedObject == null)
-                return;
+			if (Input.GetMouseButtonDown(0))
+				HandleInteractable();
+		}
 
-            Interactable interactable = currentDetectedObject as Interactable;
-            if (interactable == null)
-                return;
+		private void HandleHoverable(Hoverable hoverable)
+		{
+			if (currentDetectedObject != hoverable)
+			{
+				if (currentDetectedObject != null)
+					currentDetectedObject.StopHover();
+			}
 
-            LockInteraction();
-            interactable.StartInteract();
+			currentDetectedObject = hoverable;
 
-            if (animator != null && interactable.AnimationType != InteractionAnimationType.None)
-            {
-                var player = Player.PlayerController.Instance;
-                if (player != null)
-                {
-                    player.handleKeyboardInput = false;
-                    Cursor.lockState = CursorLockMode.None;
-                }
+			if (currentDetectedObject != null)
+			{
+				currentDetectedObject.StartHover();
+			}
+		}
 
-                animator.SetTrigger(HashTriggerKnock);
-                StartCoroutine(FinishAnimation(interactable.animationDuration));
-            }
-        }
+		private void HandleInteractable()
+		{
+			Debug.Log("HandleInteractable");
 
-        private IEnumerator FinishAnimation(float duration)
-        {
-            yield return new WaitForSeconds(duration);
+			if (currentDetectedObject == null)
+				return;
 
-            var player = Player.PlayerController.Instance;
-            if (player != null)
-            {
-                player.handleKeyboardInput = true;
-                Cursor.lockState = CursorLockMode.Locked;
-            }
+			Interactable interactable = currentDetectedObject as Interactable;
+			if (interactable == null)
+				return;
 
-            UnlockInteraction();
-        }
+			interactable.StartInteract();
 
-        public void LockInteraction()
-        {
-            lockedInteraction = true;
+			if (animator != null && interactable.AnimationType == InteractionAnimationType.Knock)
+			{
+				PlayerController.Instance.handleKeyboardInput = false;
+				Cursor.lockState = CursorLockMode.None;
+				animator.SetTrigger(HashTriggerKnock);
+				StartCoroutine(FinishAnimation(2.0f));
+			}
+		}
 
-            if (currentDetectedObject != null)
-            {
-                currentDetectedObject.StopHover();
-                currentDetectedObject = null;
-            }
-        }
+		private void PlayAnimation(InteractionAnimationType animationType)
+		{
+			if (animator != null && animationType == InteractionAnimationType.Knock)
+			{
+				PlayerController.Instance.handleKeyboardInput = false;
+				Cursor.lockState = CursorLockMode.None;
+				animator.SetTrigger(HashTriggerKnock);
+				StartCoroutine(FinishAnimation(2.0f));
+			}
+		}
 
-        public void UnlockInteraction()
-        {
-            lockedInteraction = false;
-        }
-    }
+		private IEnumerator FinishAnimation(float duration)
+		{
+			yield return new WaitForSeconds(duration);
+			PlayerController.Instance.handleKeyboardInput = true;
+			Cursor.lockState = CursorLockMode.Locked;
+		}
+
+		public void LockInteraction()
+		{
+			lockedInteraction = true;
+			currentDetectedObject.StopHover();
+			currentDetectedObject = null;
+		}
+
+		public void UnlockInteraction()
+		{
+			lockedInteraction = false;
+		}
+	}
 }

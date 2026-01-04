@@ -1,46 +1,58 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Leftovers.Neighbour
 {
-    public class Bully : MonoBehaviour
-    {
-        [SerializeField] private float pushForce = 5f;
-        [SerializeField] private float decaySpeed = 5f;
-        [SerializeField] private Vector3 direction = Vector3.forward;
+	public class Bully : MonoBehaviour
+	{
+		[SerializeField]
+		private float pushForce;
 
-        private CharacterController playerController;
-        private float currentForce;
+		[SerializeField]
+		private float decaySpeed;
 
-        private void OnTriggerEnter(Collider other)
-        {
-            if (other == null)
-                return;
+		[SerializeField]
+		private Vector3 direction;
 
-            var controller = other.GetComponent<CharacterController>();
-            if (controller == null)
-                return;
+		private CharacterController playerController;
+		private float currentForce;
 
-            playerController = controller;
-            currentForce = pushForce;
-        }
+		public Bully()
+		{
+			decaySpeed = 5.0f;
+			direction = Vector3.zero;
+		}
 
-        private void Update()
-        {
-            if (playerController == null)
-                return;
+		private void OnTriggerEnter(Collider other)
+		{
+			GameObject gameObject = other.gameObject;
+			playerController = gameObject.GetComponent<CharacterController>();
 
-            if (currentForce > 0f)
-            {
-                Vector3 move = direction.normalized * currentForce * Time.deltaTime;
-                playerController.Move(move);
-            }
-            else
-            {
-                playerController = null;
-                return;
-            }
+			if (playerController != null)
+				currentForce = pushForce;
+		}
 
-            currentForce = Mathf.Lerp(currentForce, 0f, Time.deltaTime * decaySpeed);
-        }
-    }
+		private void Update()
+		{
+			if (playerController != null)
+			{
+				if (currentForce > 0.0f)
+				{
+					float deltaTime = Time.deltaTime;
+					Vector3 moveVector = new Vector3(
+						direction.x * currentForce * deltaTime,
+						direction.y * currentForce * deltaTime,
+						direction.z * currentForce * deltaTime
+					);
+					playerController.Move(moveVector);
+				}
+				else
+				{
+					playerController = null;
+				}
+
+				currentForce = Mathf.Lerp(currentForce, 0.0f, Time.deltaTime * decaySpeed);
+			}
+		}
+	}
 }

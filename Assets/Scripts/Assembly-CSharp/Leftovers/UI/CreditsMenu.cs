@@ -1,47 +1,50 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
 namespace Leftovers.UI
 {
-    public class CreditsMenu : MonoBehaviour
-    {
-        [SerializeField] private float delay = 10f;
-        [SerializeField] private float fadeDuration = 0.5f;
-        [SerializeField] private TMP_Text textComponent;
+	public class CreditsMenu : MonoBehaviour
+	{
+		[SerializeField]
+		private float delay;
 
-        private void OnEnable()
-        {
-            if (textComponent != null)
-            {
-                var c = textComponent.color;
-                c.a = 0f;
-                textComponent.color = c;
-            }
+		[SerializeField]
+		private float fadeDuration;
 
-            StartCoroutine(DelayMessage());
-        }
+		[SerializeField]
+		private TMP_Text textComponent;
 
-        private IEnumerator DelayMessage()
-        {
-            yield return new WaitForSeconds(delay);
+		public CreditsMenu()
+		{
+			delay = 10f;
+			fadeDuration = 0.5f;
+		}
 
-            if (textComponent == null)
-                yield break;
+		private void OnEnable()
+		{
+			StartCoroutine(DelayMessage());
+		}
 
-            float timer = 0f;
-            Color color = textComponent.color;
+		private IEnumerator DelayMessage()
+		{
+			yield return new WaitForSeconds(delay);
 
-            while (timer < fadeDuration)
-            {
-                color.a = Mathf.Lerp(0f, 1f, timer / fadeDuration);
-                textComponent.color = color;
-                timer += Time.deltaTime;
-                yield return null;
-            }
+			float timer = 0f;
+			Color textColor = textComponent.color;
 
-            color.a = 1f;
-            textComponent.color = color;
-        }
-    }
+			while (timer < fadeDuration)
+			{
+				textColor.a = Mathf.Lerp(0f, 1f, timer / fadeDuration);
+				textComponent.color = textColor;
+				timer += Time.deltaTime;
+				yield return null;
+			}
+
+			timer = fadeDuration;
+			textColor.a = 1f;
+			textComponent.color = textColor;
+		}
+	}
 }

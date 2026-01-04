@@ -1,72 +1,77 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using Leftovers.Player;
 
 namespace Leftovers.UI
 {
-    public class SingleDialoguePrompt : MonoBehaviour
-    {
-        [SerializeField] private string message;
-        [SerializeField] private float delayMessage;
-        [SerializeField] private UnityEvent onStartDialogue;
-        [SerializeField] private UnityEvent onCloseDialogue;
+	public class SingleDialoguePrompt : MonoBehaviour
+	{
+		[SerializeField]
+		private string message;
 
-        public void ShowDialogue()
-        {
-            var player = Leftovers.Player.PlayerController.Instance;
-            if (player != null)
-                player.handleKeyboardInput = false;
+		[SerializeField]
+		private float delayMessage;
 
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+		[SerializeField]
+		private UnityEvent onStartDialogue;
 
-            onStartDialogue?.Invoke();
-            StartCoroutine(ListenToPrompt());
-        }
+		[SerializeField]
+		private UnityEvent onCloseDialogue;
 
-        private IEnumerator ListenToPrompt()
-        {
-            yield return new WaitForSeconds(delayMessage);
+		public SingleDialoguePrompt()
+		{
+			onStartDialogue = new UnityEvent();
+			onCloseDialogue = new UnityEvent();
+		}
 
-            var uiManager = UIManager.Instance;
-            if (uiManager == null)
-                yield break;
+		public void ShowDialogue()
+		{
+			PlayerController player = PlayerController.Instance;
+			if (player != null)
+			{
+				player.handleKeyboardInput = false;
+				player.handleMouseInput = false;
+			}
 
-            uiManager.SetMessage(message, 0f);
-            yield return new WaitForSeconds(1.25f);
+			Cursor.lockState = CursorLockMode.None;
 
-            var promptGO = uiManager.promptGameObject;
-            if (promptGO != null)
-                promptGO.SetActive(true);
+			if (onStartDialogue != null)
+				onStartDialogue.Invoke();
 
-            while (!Input.GetMouseButtonDown(0))
-                yield return null;
+			StartCoroutine(ListenToPrompt());
+		}
 
-            if (promptGO != null)
-                promptGO.SetActive(false);
+		private IEnumerator ListenToPrompt()
+		{
+			yield return new WaitForSeconds(delayMessage);
 
-            uiManager.SetMessage(string.Empty, 0f);
+			UIManager.Instance.SetMessage(message);
 
-            var player = Player.PlayerController.Instance;
-            if (player != null)
-            {
-                player.pausedKeyboard = true;
-                player.pausedMouse = true;
-            }
+			yield return new WaitForSeconds(1.25f);
 
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+			UIManager.Instance.SetDialogueClickPromptVisibility(true);
 
-            onCloseDialogue?.Invoke();
-        }
+			while (!Input.GetMouseButtonDown(0))
+			{
+				yield return null;
+			}
 
-        private void Reset()
-        {
-            if (onStartDialogue == null)
-                onStartDialogue = new UnityEvent();
+			UIManager.Instance.SetDialogueClickPromptVisibility(false);
+			UIManager.Instance.SetMessage(string.Empty);
 
-            if (onCloseDialogue == null)
-                onCloseDialogue = new UnityEvent();
-        }
-    }
+			PlayerController player = PlayerController.Instance;
+			if (player != null)
+			{
+				player.handleKeyboardInput = true;
+				player.handleMouseInput = true;
+			}
+
+			Cursor.lockState = CursorLockMode.Locked;
+
+			if (onCloseDialogue != null)
+				onCloseDialogue.Invoke();
+		}
+	}
 }

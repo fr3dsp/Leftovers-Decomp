@@ -1,25 +1,42 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace Leftovers.Utilities
 {
-    public class Timer : MonoBehaviour
-    {
-        [SerializeField] private float duration = 1f;
-        [SerializeField] private UnityEvent onTimerStart;
-        [SerializeField] private UnityEvent onTimerEnd;
+	public class Timer : MonoBehaviour
+	{
+		[SerializeField]
+		private float duration;
 
-        public void StartTimer()
-        {
-            onTimerStart?.Invoke();
-            StartCoroutine(UpdateTimer());
-        }
+		[SerializeField]
+		private UnityEvent onTimerStart;
 
-        private IEnumerator UpdateTimer()
-        {
-            yield return new WaitForSeconds(duration);
-            onTimerEnd?.Invoke();
-        }
-    }
+		[SerializeField]
+		private UnityEvent onTimerEnd;
+
+		public Timer()
+		{
+			duration = 1f;
+			onTimerStart = new UnityEvent();
+			onTimerEnd = new UnityEvent();
+		}
+
+		public void StartTimer()
+		{
+			if (onTimerStart != null)
+				onTimerStart.Invoke();
+
+			StartCoroutine(UpdateTimer());
+		}
+
+		private IEnumerator UpdateTimer()
+		{
+			yield return new WaitForSeconds(duration);
+
+			if (onTimerEnd != null)
+				onTimerEnd.Invoke();
+		}
+	}
 }

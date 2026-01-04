@@ -3,38 +3,36 @@ using UnityEngine;
 
 namespace Leftovers.Neighbour
 {
-    public class DoorSoundEffect : MonoBehaviour
-    {
-        [SerializeField] private AudioSource audioSource;
-        [SerializeField] private AudioClip sfxDoorOpen;
-        [SerializeField] private AudioClip sfxDoorClose;
-        [SerializeField] private AudioClip sfxGrunt;
+	public class DoorSoundEffect : MonoBehaviour
+	{
+		[SerializeField]
+		private AudioSource audioSource;
 
-        public void PlayDoorOpen()
-        {
-            if (audioSource == null)
-                throw new NullReferenceException("AudioSource is not assigned.");
+		[SerializeField]
+		private AudioClip sfxDoorOpen;
 
-            if (sfxDoorOpen != null)
-                audioSource.PlayOneShot(sfxDoorOpen);
-        }
+		[SerializeField]
+		private AudioClip sfxDoorClose;
 
-        public void PlayDoorClose()
-        {
-            if (audioSource == null)
-                throw new NullReferenceException("AudioSource is not assigned.");
+		[SerializeField]
+		private AudioClip sfxGrunt;
 
-            if (sfxDoorClose != null)
-                audioSource.PlayOneShot(sfxDoorClose);
-        }
+		public void PlayDoorOpen()
+		{
+			if (audioSource != null && sfxDoorOpen != null)
+				audioSource.PlayOneShot(sfxDoorOpen);
+		}
 
-        public void PlayGrunt()
-        {
-            if (audioSource == null)
-                throw new NullReferenceException("AudioSource is not assigned.");
+		public void PlayDoorClose()
+		{
+			if (audioSource != null && sfxDoorClose != null)
+				audioSource.PlayOneShot(sfxDoorClose);
+		}
 
-            if (sfxGrunt != null)
-                audioSource.PlayOneShot(sfxGrunt);
-        }
-    }
+		public void PlayGrunt()
+		{
+			if (audioSource != null && sfxGrunt != null)
+				audioSource.PlayOneShot(sfxGrunt);
+		}
+	}
 }

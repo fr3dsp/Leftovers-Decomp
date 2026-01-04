@@ -1,31 +1,40 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.Events;
+using Leftovers.UI;
 
 namespace Leftovers.General
 {
-    public class Hoverable : MonoBehaviour
-    {
-        [SerializeField] private string tooltip = string.Empty;
-        [SerializeField] private UnityEvent onStartHover = new UnityEvent();
-        [SerializeField] private UnityEvent onStopHover = new UnityEvent();
+	public class Hoverable : MonoBehaviour
+	{
+		[SerializeField]
+		private string tooltip;
 
-        public void StartHover()
-        {
-            var uiManager = Leftovers.UI.UIManager.Instance;
-            if (uiManager == null) return;
+		[SerializeField]
+		private UnityEvent onStartHover;
 
-            uiManager.SetMessage(tooltip, 0f);
-            onStartHover?.Invoke();
-        }
+		[SerializeField]
+		private UnityEvent onStopHover;
 
-        public void StopHover()
-        {
-            var uiManager = Leftovers.UI.UIManager.Instance;
-            if (uiManager == null) return;
+		public Hoverable()
+		{
+			tooltip = string.Empty;
+			onStartHover = new UnityEvent();
+			onStopHover = new UnityEvent();
+		}
 
-            uiManager.SetMessage(string.Empty, 0f);
-            onStopHover?.Invoke();
-        }
-    }
+		public void StartHover()
+		{
+			UIManager.Instance.SetTooltip(tooltip);
+			if (onStartHover != null)
+				onStartHover.Invoke();
+		}
+
+		public void StopHover()
+		{
+			UIManager.Instance.SetTooltip(string.Empty);
+			if (onStopHover != null)
+				onStopHover.Invoke();
+		}
+	}
 }

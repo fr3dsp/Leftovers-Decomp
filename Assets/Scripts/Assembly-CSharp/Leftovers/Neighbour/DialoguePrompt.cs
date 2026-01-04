@@ -2,19 +2,18 @@
 
 namespace Leftovers.Neighbour
 {
-    [Serializable]
-    public class DialoguePrompt
-    {
-        public DialoguePrompt()
-        {
-        }
+	[Serializable]
+	public class DialoguePrompt
+	{
+		public string name;
 
-        public string name;
+		public bool hasNod;
+		public int nodSegmentIndex;
 
-        public DialoguePromptOption optionNod;
+		public bool hasShake;
+		public int shakeSegmentIndex;
 
-        public DialoguePromptOption optionShake;
-
-        public DialoguePromptOption optionShowFood;
-    }
+		public bool hasShowFood;
+		public int showFoodSegmentIndex;
+	}
 }

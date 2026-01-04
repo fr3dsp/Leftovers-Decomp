@@ -1,4 +1,6 @@
+﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -6,66 +8,279 @@ using UnityEngine.UI;
 
 namespace Leftovers.UI
 {
-    public class UIManager : MonoBehaviour
-    {
-        private static UIManager instance;
+	public class UIManager : MonoBehaviour
+	{
+		public static UIManager Instance
+		{
+			get
+			{
+				return instance;
+			}
+			set
+			{
+				if (instance == null || value == null)
+				{
+					instance = value;
+				}
+				else
+				{
+					Destroy(value.gameObject);
+				}
+			}
+		}
 
-        [SerializeField] private float fadeInDuration;
-        [SerializeField] private float fadeOutDuration;
-        [SerializeField] private float fadeInAndOutDelay;
-        [SerializeField] private Color originalColor;
-        [SerializeField] private Color fadedColor;
-        [SerializeField] private TMP_Text messageText;
-        [SerializeField] private TMP_Text innerMessageText;
-        [SerializeField] private TMP_Text tooltipText;
-        [SerializeField] private Image transitionImage;
-        [SerializeField] private GameObject dialogueClickPrompt;
+		private void Awake()
+		{
+			Instance = this;
+		}
 
-        private Coroutine clearMessageCoroutine;
-        private Coroutine clearInnerMessageCoroutine;
+		private void OnDestroy()
+		{
+			Instance = null;
+		}
 
-        public static UIManager Instance
-        {
-            get => instance;
-            private set => instance = value;
-        }
+		public void SetMessage(string message, float duration = -1f)
+		{
+			if (clearMessageCoroutine != null)
+			{
+				StopCoroutine(clearMessageCoroutine);
+				clearMessageCoroutine = null;
+			}
 
-        public GameObject promptGameObject => dialogueClickPrompt;
+			if (duration < 0f)
+			{
+				messageText.SetText(message);
+			}
+			else
+			{
+				StartCoroutine(ShowAndClearMessage(messageText, message, duration));
+			}
+		}
 
-        private void Awake()
-        {
-            instance = this;
-        }
+		public void SetMessage(string message)
+		{
+			if (clearMessageCoroutine != null)
+			{
+				StopCoroutine(clearMessageCoroutine);
+				clearMessageCoroutine = null;
+			}
 
-        private void OnDestroy()
-        {
-            if (instance == this)
-                instance = null;
-        }
+			messageText.SetText(message);
+		}
 
-        public void SetMessage(string message, float duration = -1f) { }
-        public void SetMessage(string message) => SetMessage(message, -1f);
-        public void ClearMessage(float delay) { }
-        public void SetInnerMessage(string message, float duration = -1f) { }
-        public void SetInnerMessage(string message) => SetInnerMessage(message, -1f);
-        public void ClearInnerMessage(float delay) { }
-        public void SetDialogueClickPromptVisibility(bool visibility)
-        {
-            if (dialogueClickPrompt != null)
-                dialogueClickPrompt.SetActive(visibility);
-        }
-        public void SetTooltip(string message) { }
-        public void FadeIn(UnityAction callback) { }
-        public void FadeIn() { }
-        public void FadeOut(UnityAction callback) { }
-        public void FadeOut() { }
-        public void FadeInAndOut(UnityAction callbackIn, UnityAction callbackOut) { }
+		public void ClearMessage(float delay)
+		{
+			if (clearMessageCoroutine != null)
+			{
+				StopCoroutine(clearMessageCoroutine);
+				clearMessageCoroutine = null;
+			}
 
-        private IEnumerator FadingIn(UnityAction callback) => null;
-        public IEnumerator FadingOut(UnityAction callback) => null;
-        private IEnumerator FadingInAndOut(UnityAction callbackIn, UnityAction callbackOut) => null;
-        private IEnumerator ShowAndClearMessage(TMP_Text textComponent, string message, float duration) => null;
-        private IEnumerator DelayedClearMessage(TMP_Text textComponent, float delay) => null;
-        private IEnumerator DelayedClearInnerMessage(TMP_Text textComponent, float delay) => null;
-    }
+			clearMessageCoroutine = StartCoroutine(DelayedClearMessage(messageText, delay));
+		}
+
+		public void SetInnerMessage(string message, float duration = -1f)
+		{
+			if (clearInnerMessageCoroutine != null)
+			{
+				StopCoroutine(clearInnerMessageCoroutine);
+				clearInnerMessageCoroutine = null;
+			}
+
+			if (duration < 0f)
+			{
+				innerMessageText.SetText(message);
+			}
+			else
+			{
+				StartCoroutine(ShowAndClearMessage(innerMessageText, message, duration));
+			}
+		}
+
+		public void SetInnerMessage(string message)
+		{
+			if (clearInnerMessageCoroutine != null)
+			{
+				StopCoroutine(clearInnerMessageCoroutine);
+				clearInnerMessageCoroutine = null;
+			}
+
+			innerMessageText.SetText(message);
+		}
+
+		public void ClearInnerMessage(float delay)
+		{
+			if (clearInnerMessageCoroutine != null)
+			{
+				StopCoroutine(clearInnerMessageCoroutine);
+				clearInnerMessageCoroutine = null;
+			}
+
+			clearInnerMessageCoroutine = StartCoroutine(DelayedClearInnerMessage(innerMessageText, delay));
+		}
+
+		public void SetDialogueClickPromptVisibility(bool visibility)
+		{
+			dialogueClickPrompt.SetActive(visibility);
+		}
+
+		public void SetTooltip(string message)
+		{
+			tooltipText.SetText(message);
+		}
+
+		public void FadeIn(UnityAction callback)
+		{
+			StartCoroutine(FadingIn(callback));
+		}
+
+		public void FadeIn()
+		{
+			StartCoroutine(FadingIn(null));
+		}
+
+		public void FadeOut(UnityAction callback)
+		{
+			StartCoroutine(FadingOut(callback));
+		}
+
+		public void FadeOut()
+		{
+			StartCoroutine(FadingOut(null));
+		}
+
+		public void FadeInAndOut(UnityAction callbackIn, UnityAction callbackOut)
+		{
+			StartCoroutine(FadingInAndOut(callbackIn, callbackOut));
+		}
+
+		private IEnumerator FadingIn(UnityAction callback)
+		{
+			float timer = 0f;
+			transitionImage.color = originalColor;
+
+			while (timer < fadeInDuration)
+			{
+				transitionImage.color = Color.Lerp(originalColor, fadedColor, timer / fadeInDuration);
+				timer += Time.deltaTime;
+				yield return null;
+			}
+
+			transitionImage.color = fadedColor;
+			callback?.Invoke();
+		}
+
+		private IEnumerator FadingOut(UnityAction callback)
+		{
+			float timer = 0f;
+			transitionImage.color = fadedColor;
+
+			while (timer < fadeOutDuration)
+			{
+				transitionImage.color = Color.Lerp(fadedColor, originalColor, timer / fadeOutDuration);
+				timer += Time.deltaTime;
+				yield return null;
+			}
+
+			transitionImage.color = originalColor;
+			callback?.Invoke();
+		}
+
+		private IEnumerator FadingInAndOut(UnityAction callbackIn, UnityAction callbackOut)
+		{
+			float timer = 0f;
+			transitionImage.color = originalColor;
+
+			while (timer < fadeInDuration)
+			{
+				transitionImage.color = Color.Lerp(originalColor, fadedColor, timer / fadeInDuration);
+				timer += Time.deltaTime;
+				yield return null;
+			}
+
+			transitionImage.color = fadedColor;
+			callbackIn?.Invoke();
+
+			yield return new WaitForSeconds(fadeInAndOutDelay);
+
+			timer = 0f;
+			while (timer < fadeOutDuration)
+			{
+				transitionImage.color = Color.Lerp(fadedColor, originalColor, timer / fadeOutDuration);
+				timer += Time.deltaTime;
+				yield return null;
+			}
+
+			transitionImage.color = originalColor;
+			callbackOut?.Invoke();
+		}
+
+		private IEnumerator ShowAndClearMessage(TMP_Text textComponent, string message, float duration)
+		{
+			textComponent.SetText(message);
+			yield return new WaitForSeconds(duration);
+			textComponent.SetText(string.Empty);
+		}
+
+		private IEnumerator DelayedClearMessage(TMP_Text textComponent, float delay)
+		{
+			yield return new WaitForSeconds(delay);
+			textComponent.SetText(string.Empty);
+			clearMessageCoroutine = null;
+		}
+
+		private IEnumerator DelayedClearInnerMessage(TMP_Text textComponent, float delay)
+		{
+			yield return new WaitForSeconds(delay);
+			textComponent.SetText(string.Empty);
+			clearInnerMessageCoroutine = null;
+		}
+
+		public UIManager()
+		{
+			fadeInDuration = 1f;
+			fadeOutDuration = 1f;
+			fadeInAndOutDelay = 1f;
+			originalColor = Color.black;
+			fadedColor = Color.black;
+		}
+
+		private static UIManager instance;
+
+		[Header("Fade Settings")]
+		[SerializeField]
+		private float fadeInDuration;
+
+		[SerializeField]
+		private float fadeOutDuration;
+
+		[SerializeField]
+		private float fadeInAndOutDelay;
+
+		[SerializeField]
+		private Color originalColor;
+
+		[SerializeField]
+		private Color fadedColor;
+
+		[Header("UI Elements")]
+		[SerializeField]
+		private TMP_Text messageText;
+
+		[SerializeField]
+		private TMP_Text innerMessageText;
+
+		[SerializeField]
+		private TMP_Text tooltipText;
+
+		[SerializeField]
+		private Image transitionImage;
+
+		[SerializeField]
+		private GameObject dialogueClickPrompt;
+
+		private Coroutine clearMessageCoroutine;
+
+		private Coroutine clearInnerMessageCoroutine;
+	}
 }

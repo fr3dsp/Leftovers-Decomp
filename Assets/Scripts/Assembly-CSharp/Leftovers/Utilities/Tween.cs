@@ -1,59 +1,81 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace Leftovers.Utilities
 {
-    public class Tween : MonoBehaviour
-    {
-        [SerializeField] private float tweenDuration = 1f;
-        [SerializeField] private bool enableOnStart = true;
-        [SerializeField] private bool disableOnEnd = false;
-        [SerializeField] private Transform objectToTween;
-        [SerializeField] private Transform positionFrom;
-        [SerializeField] private Transform positionTo;
-        [SerializeField] private UnityEvent onTweenStart;
-        [SerializeField] private UnityEvent onTweenEnd;
+	public class Tween : MonoBehaviour
+	{
+		[SerializeField]
+		private float tweenDuration;
 
-        /// <summary>
-        /// Starts the tween coroutine.
-        /// </summary>
-        public void StartTween()
-        {
-            StartCoroutine(Tweening());
-        }
+		[SerializeField]
+		private bool enableOnStart;
 
-        private IEnumerator Tweening()
-        {
-            if (objectToTween == null)
-                yield break;
+		[SerializeField]
+		private bool disableOnEnd;
 
-            Debug.Log(name + " Tween start");
-            onTweenStart?.Invoke();
+		[SerializeField]
+		private Transform objectToTween;
 
-            if (enableOnStart)
-                objectToTween.gameObject.SetActive(true);
+		[SerializeField]
+		private Transform positionFrom;
 
-            float timer = 0f;
-            Vector3 startPos = positionFrom?.position ?? objectToTween.position;
-            Vector3 endPos = positionTo?.position ?? startPos;
+		[SerializeField]
+		private Transform positionTo;
 
-            while (timer < tweenDuration)
-            {
-                timer += Time.deltaTime;
-                float t = Mathf.Clamp01(timer / tweenDuration);
-                objectToTween.position = Vector3.Lerp(startPos, endPos, t);
-                yield return null;
-            }
+		[SerializeField]
+		private UnityEvent onTweenStart;
 
-            // Ensure final position
-            objectToTween.position = endPos;
+		[SerializeField]
+		private UnityEvent onTweenEnd;
 
-            if (disableOnEnd)
-                objectToTween.gameObject.SetActive(false);
+		public Tween()
+		{
+			enableOnStart = true;
+			disableOnEnd = true;
+			onTweenStart = new UnityEvent();
+			onTweenEnd = new UnityEvent();
+		}
 
-            onTweenEnd?.Invoke();
-            Debug.Log(name + " Tween end");
-        }
-    }
+		public void StartTween()
+		{
+			StartCoroutine(Tweening());
+		}
+
+		private IEnumerator Tweening()
+		{
+			Debug.Log(gameObject.name + " Tween start");
+
+			if (onTweenStart != null)
+				onTweenStart.Invoke();
+
+			if (enableOnStart)
+				objectToTween.gameObject.SetActive(true);
+
+			float timer = 0f;
+
+			while (timer < tweenDuration)
+			{
+				Vector3 startPos = positionFrom.position;
+				Vector3 endPos = positionTo.position;
+				float t = Mathf.Clamp01(timer / tweenDuration);
+				objectToTween.position = Vector3.Lerp(startPos, endPos, t);
+
+				timer += Time.deltaTime;
+				yield return null;
+			}
+
+			objectToTween.position = positionTo.position;
+
+			if (disableOnEnd)
+				objectToTween.gameObject.SetActive(false);
+
+			if (onTweenEnd != null)
+				onTweenEnd.Invoke();
+
+			Debug.Log(gameObject.name + " Tween end");
+		}
+	}
 }

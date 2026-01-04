@@ -1,113 +1,148 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace Leftovers.UI
 {
-    public class ButtonEffect : MonoBehaviour
-    {
-        [SerializeField] private float hoveredScale = 1.1f;
-        [SerializeField] private Color hoveredColor = Color.red;
-        [SerializeField] private float effectDuration = 0.15f;
+	public class ButtonEffect : MonoBehaviour
+	{
+		[SerializeField]
+		private float hoveredScale;
 
-        private TMP_Text textComponent;
-        private Color originalColor;
-        private float originalScale;
-        private Coroutine coroutine;
+		[SerializeField]
+		private Color hoveredColor;
 
-        private void Awake()
-        {
-            textComponent = GetComponentInChildren<TMP_Text>();
-            if (textComponent != null)
-                originalColor = textComponent.color;
+		[SerializeField]
+		private float effectDuration;
 
-            originalScale = transform.localScale.x;
+		private TMP_Text textComponent;
+		private Color originalColor;
+		private float originalScale;
+		private float timer;
+		private Coroutine coroutine;
+		private EventTrigger eventTrigger;
 
-            var trigger = gameObject.AddComponent<EventTrigger>();
+		public ButtonEffect()
+		{
+			hoveredScale = 1.0f;
+			effectDuration = 1.0f;
+			hoveredColor = Color.red;
+			originalScale = 1.0f;
+			originalColor = Color.white;
+		}
 
-            var enter = new EventTrigger.Entry
-            {
-                eventID = EventTriggerType.PointerEnter
-            };
-            enter.callback.AddListener(OnPointerEnter);
-            trigger.triggers.Add(enter);
+		private void Awake()
+		{
+			textComponent = GetComponentInChildren<TMP_Text>();
+			if (textComponent != null)
+				originalColor = textComponent.color;
 
-            var exit = new EventTrigger.Entry
-            {
-                eventID = EventTriggerType.PointerExit
-            };
-            exit.callback.AddListener(OnPointerExit);
-            trigger.triggers.Add(exit);
-        }
+			originalScale = transform.localScale.x;
+			timer = 0f;
 
-        private void OnEnable()
-        {
-            ResetVisuals();
-        }
+			eventTrigger = gameObject.AddComponent<EventTrigger>();
 
-        private void OnDisable()
-        {
-            if (coroutine != null)
-            {
-                StopCoroutine(coroutine);
-                coroutine = null;
-            }
-        }
+			EventTrigger.Entry pointerEnterEntry = new EventTrigger.Entry();
+			pointerEnterEntry.eventID = EventTriggerType.PointerEnter;
+			pointerEnterEntry.callback.AddListener(OnPointerEnter);
+			eventTrigger.triggers.Add(pointerEnterEntry);
 
-        private void OnPointerEnter(BaseEventData data)
-        {
-            StartEffect(true);
-        }
+			EventTrigger.Entry pointerExitEntry = new EventTrigger.Entry();
+			pointerExitEntry.eventID = EventTriggerType.PointerExit;
+			pointerExitEntry.callback.AddListener(OnPointerExit);
+			eventTrigger.triggers.Add(pointerExitEntry);
+		}
 
-        private void OnPointerExit(BaseEventData data)
-        {
-            StartEffect(false);
-        }
+		private void OnEnable()
+		{
+			if (textComponent != null)
+			{
+				textComponent.color = originalColor;
+				transform.localScale = Vector3.one * originalScale;
+			}
+		}
 
-        private void StartEffect(bool hover)
-        {
-            if (coroutine != null)
-                StopCoroutine(coroutine);
+		private void OnDisable()
+		{
+			if (coroutine != null)
+			{
+				StopCoroutine(coroutine);
+				coroutine = null;
+			}
+		}
 
-            coroutine = StartCoroutine(Animate(hover));
-        }
+		private void OnPointerEnter(BaseEventData data)
+		{
+			if (coroutine != null)
+			{
+				StopCoroutine(coroutine);
+				coroutine = null;
+			}
+			coroutine = StartCoroutine(PointerOverCoroutine());
+		}
 
-        private IEnumerator Animate(bool hover)
-        {
-            float time = 0f;
+		private void OnPointerExit(BaseEventData data)
+		{
+			if (coroutine != null)
+			{
+				StopCoroutine(coroutine);
+				coroutine = null;
+			}
+			coroutine = StartCoroutine(PointerOffCoroutine());
+		}
 
-            float startScale = transform.localScale.x;
-            float targetScale = hover ? hoveredScale : originalScale;
+		private IEnumerator PointerOverCoroutine()
+		{
+			Vector3 originalScaleVec3 = Vector3.one * originalScale;
+			Vector3 hoveredScaleVec3 = Vector3.one * hoveredScale;
 
-            Color startColor = textComponent != null ? textComponent.color : Color.white;
-            Color targetColor = hover ? hoveredColor : originalColor;
+			while (effectDuration > timer)
+			{
+				float t = Mathf.Clamp01(timer / effectDuration);
+				transform.localScale = Vector3.Lerp(originalScaleVec3, hoveredScaleVec3, t);
 
-            while (time < effectDuration)
-            {
-                float t = time / effectDuration;
-                float scale = Mathf.Lerp(startScale, targetScale, t);
-                transform.localScale = Vector3.one * scale;
+				if (textComponent != null)
+					textComponent.color = Color.Lerp(originalColor, hoveredColor, t);
 
-                if (textComponent != null)
-                    textComponent.color = Color.Lerp(startColor, targetColor, t);
+				timer += Time.unscaledDeltaTime;
+				yield return null;
+			}
 
-                time += Time.unscaledDeltaTime;
-                yield return null;
-            }
+			timer = effectDuration;
+			transform.localScale = hoveredScaleVec3;
 
-            transform.localScale = Vector3.one * targetScale;
-            if (textComponent != null)
-                textComponent.color = targetColor;
+			if (textComponent != null)
+				textComponent.color = hoveredColor;
 
-            coroutine = null;
-        }
+			coroutine = null;
+		}
 
-        private void ResetVisuals()
-        {
-            transform.localScale = Vector3.one * originalScale;
-            if (textComponent != null)
-                textComponent.color = originalColor;
-        }
-    }
+		private IEnumerator PointerOffCoroutine()
+		{
+			Vector3 originalScaleVec3 = Vector3.one * originalScale;
+			Vector3 hoveredScaleVec3 = Vector3.one * hoveredScale;
+
+			while (timer > 0f)
+			{
+				float t = Mathf.Clamp01(timer / effectDuration);
+				transform.localScale = Vector3.Lerp(originalScaleVec3, hoveredScaleVec3, t);
+
+				if (textComponent != null)
+					textComponent.color = Color.Lerp(originalColor, hoveredColor, t);
+
+				timer -= Time.unscaledDeltaTime;
+				yield return null;
+			}
+
+			timer = 0f;
+			transform.localScale = originalScaleVec3;
+
+			if (textComponent != null)
+				textComponent.color = originalColor;
+
+			coroutine = null;
+		}
+	}
 }

@@ -2,10 +2,10 @@
 
 namespace Leftovers.Utilities
 {
-	public enum _TransitionType
+	public enum TransitionType
 	{
 		FadeInAndOut,
 		FadeOut,
-		None
+		Instant
 	}
 }

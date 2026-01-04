@@ -1,68 +1,62 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 namespace Leftovers.Utilities
 {
-    public class AudioUtility : MonoBehaviour
-    {
-        [SerializeField] private AudioSource audioSource;
-        [SerializeField] private float volume = 1.0f;
+	public class AudioUtility : MonoBehaviour
+	{
+		[SerializeField]
+		private AudioSource audioSource;
 
-        public void StartFadeIn(float duration)
-        {
-            if (audioSource == null) return;
+		[SerializeField]
+		private float volume;
 
-            audioSource.volume = 0f;
-            audioSource.Play();
-            StartCoroutine(FadeIn(duration));
-        }
+		public AudioUtility()
+		{
+			volume = 1.0f;
+		}
 
-        private IEnumerator FadeIn(float duration)
-        {
-            float timer = 0f;
-            while (timer < duration)
-            {
-                timer += Time.deltaTime;
-                if (audioSource != null)
-                    audioSource.volume = Mathf.Lerp(0f, volume, timer / duration);
-                yield return null;
-            }
-            if (audioSource != null)
-                audioSource.volume = volume;
-        }
+		public void StartFadeIn(float duration)
+		{
+			audioSource.volume = 0f;
+			audioSource.Play();
+			StartCoroutine(FadeIn(duration));
+		}
 
-        public void StartFadeOut(float duration)
-        {
-            if (audioSource == null) return;
+		public void StartFadeOut(float duration)
+		{
+			audioSource.volume = volume;
+			StartCoroutine(FadeOut(duration));
+		}
 
-            StartCoroutine(FadeOut(duration));
-        }
+		private IEnumerator FadeIn(float duration)
+		{
+			float timer = 0f;
 
-        private IEnumerator FadeOut(float duration)
-        {
-            if (audioSource == null) yield break;
+			while (timer < duration)
+			{
+				timer += Time.deltaTime;
+				audioSource.volume = Mathf.Lerp(0f, volume, timer / duration);
+				yield return null;
+			}
 
-            float startVolume = audioSource.volume;
-            float timer = 0f;
+			audioSource.volume = volume;
+		}
 
-            while (timer < duration)
-            {
-                timer += Time.deltaTime;
-                audioSource.volume = Mathf.Lerp(startVolume, 0f, timer / duration);
-                yield return null;
-            }
+		private IEnumerator FadeOut(float duration)
+		{
+			float timer = 0f;
 
-            if (audioSource != null)
-            {
-                audioSource.volume = 0f;
-                audioSource.Stop();
-            }
-        }
+			while (timer < duration)
+			{
+				timer += Time.deltaTime;
+				audioSource.volume = Mathf.Lerp(volume, 0f, timer / duration);
+				yield return null;
+			}
 
-        public void PlayIfNotPlaying()
-        {
-            if (audioSource != null && !audioSource.isPlaying)
-                audioSource.Play();
-        }
-    }
+			audioSource.volume = 0f;
+			audioSource.Stop();
+		}
+	}
 }

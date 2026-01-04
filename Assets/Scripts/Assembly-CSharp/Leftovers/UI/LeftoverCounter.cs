@@ -1,77 +1,107 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
 namespace Leftovers.UI
 {
-    public class LeftoverCounter : MonoBehaviour
-    {
-        [SerializeField] private Color originalColor = Color.white;
-        [SerializeField] private Color flashColor = Color.yellow;
-        [SerializeField] private Color endColor = Color.gray;
+	public class LeftoverCounter : MonoBehaviour
+	{
+		[SerializeField]
+		private Color originalColor;
 
-        [SerializeField] private float originalSize = 36f;
-        [SerializeField] private float flashSize = 42f;
-        [SerializeField] private float flashDuration = 0.25f;
-        [SerializeField] private float returnDuration = 0.25f;
+		[SerializeField]
+		private Color flashColor;
 
-        [SerializeField] private string endCounter = "End";
-        [SerializeField] private string startCounter = "Start";
+		[SerializeField]
+		private Color endColor;
 
-        [SerializeField] private TMP_Text textCounter;
+		[SerializeField]
+		private float originalSize;
 
-        private Coroutine flashCoroutine;
+		[SerializeField]
+		private float flashSize;
 
-        public void SetCounter(string text)
-        {
-            if (textCounter == null)
-                return;
+		[SerializeField]
+		private float flashDuration;
 
-            textCounter.text = text;
+		[SerializeField]
+		private float returnDuration;
 
-            if (flashCoroutine != null)
-            {
-                StopCoroutine(flashCoroutine);
-                flashCoroutine = null;
-            }
+		[SerializeField]
+		private string endCounter;
 
-            if (text == endCounter)
-            {
-                flashCoroutine = StartCoroutine(FlashText(flashColor, endColor));
-            }
-            else if (text != startCounter)
-            {
-                flashCoroutine = StartCoroutine(FlashText(flashColor, originalColor));
-            }
-        }
+		[SerializeField]
+		private string startCounter;
 
-        private IEnumerator FlashText(Color startColor, Color targetColor)
-        {
-            float timer = 0f;
+		[SerializeField]
+		private TMP_Text textCounter;
 
-            textCounter.fontSize = flashSize;
-            textCounter.color = startColor;
+		private Coroutine flashCoroutine;
 
-            while (timer < flashDuration)
-            {
-                timer += Time.deltaTime;
-                yield return null;
-            }
+		public LeftoverCounter()
+		{
+			originalColor = Color.white;
+			flashColor = Color.white;
+			endColor = Color.white;
+			originalSize = 1f;
+			flashSize = 1f;
+			flashDuration = 2f;
+			returnDuration = 1f;
+			endCounter = "0";
+			startCounter = "5";
+		}
 
-            timer = 0f;
+		public void SetCounter(string text)
+		{
+			textCounter.text = text;
 
-            while (timer < returnDuration)
-            {
-                float t = timer / returnDuration;
-                textCounter.fontSize = Mathf.Lerp(flashSize, originalSize, t);
-                textCounter.color = Color.Lerp(startColor, targetColor, t);
-                timer += Time.deltaTime;
-                yield return null;
-            }
+			if (text == endCounter)
+			{
+				if (flashCoroutine != null)
+				{
+					StopCoroutine(flashCoroutine);
+					flashCoroutine = null;
+				}
+				flashCoroutine = StartCoroutine(FlashText(flashColor, endColor));
+			}
+			else if (text != startCounter)
+			{
+				if (flashCoroutine != null)
+				{
+					StopCoroutine(flashCoroutine);
+					flashCoroutine = null;
+				}
+				flashCoroutine = StartCoroutine(FlashText(flashColor, originalColor));
+			}
+		}
 
-            textCounter.fontSize = originalSize;
-            textCounter.color = targetColor;
-            flashCoroutine = null;
-        }
-    }
+		private IEnumerator FlashText(Color startColor, Color targetEndColor)
+		{
+			float timer = 0f;
+
+			textCounter.fontSize = flashSize;
+			textCounter.color = startColor;
+
+			while (timer < flashDuration)
+			{
+				timer += Time.deltaTime;
+				yield return null;
+			}
+
+			timer = 0f;
+
+			while (timer < returnDuration)
+			{
+				float t = timer / returnDuration;
+				textCounter.fontSize = Mathf.Lerp(flashSize, originalSize, t);
+				textCounter.color = Color.Lerp(startColor, targetEndColor, t);
+				timer += Time.deltaTime;
+				yield return null;
+			}
+
+			textCounter.fontSize = originalSize;
+			textCounter.color = targetEndColor;
+		}
+	}
 }

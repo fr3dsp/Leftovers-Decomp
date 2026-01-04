@@ -1,99 +1,114 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.Events;
+using Leftovers.Player;
+using Leftovers.UI;
 
 namespace Leftovers.Utilities
 {
-    public class Teleportation : MonoBehaviour
-    {
-        [SerializeField] private TransitionType type;
-        [SerializeField] private Transform teleportationPoint;
-        [SerializeField] private AudioClip startTeleportSound;
-        [SerializeField] private AudioClip finishTeleportSound;
-        [SerializeField] private AudioSource audioSource;
+	public class Teleportation : MonoBehaviour
+	{
+		[SerializeField]
+		private TransitionType type;
 
-        public void Teleport()
-        {
-            var playerGO = GameObject.FindGameObjectWithTag("Player");
-            var player = Leftovers.Player.PlayerController.Instance;
+		[SerializeField]
+		private Transform teleportationPoint;
 
-            if (player == null || playerGO == null)
-                throw new NullReferenceException("Player or Player GameObject not found.");
+		[SerializeField]
+		private AudioClip startTeleportSound;
 
-            player.handleKeyboardInput = false;
-            player.handleMouseInput = false;
-            Cursor.lockState = CursorLockMode.None;
+		[SerializeField]
+		private AudioClip finishTeleportSound;
 
-            switch (type)
-            {
-                case TransitionType.Fade: // 0
-                    {
-                        var ui = Leftovers.UI.UIManager.Instance;
-                        if (ui == null) throw new NullReferenceException();
+		[SerializeField]
+		private AudioSource audioSource;
 
-                        ui.FadeInAndOut(
-                            () => PerformTeleport(playerGO),
-                            () => FinishTeleport(player)
-                        );
-                        break;
-                    }
-                case TransitionType.FadeOutInstant: // 1
-                    {
-                        PerformTeleport(playerGO);
+		public void Teleport()
+		{
+			GameObject player = GameObject.FindGameObjectWithTag("Player");
 
-                        var ui = Leftovers.UI.UIManager.Instance;
-                        if (ui == null) throw new NullReferenceException();
+			PlayerController playerController = PlayerController.Instance;
+			playerController.handleKeyboardInput = false;
+			playerController.handleMouseInput = false;
+			Cursor.lockState = CursorLockMode.None;
 
-                        ui.StartCoroutine(ui.FadingOut(() => FinishTeleport(player)));
+			switch (type)
+			{
+				case TransitionType.FadeInAndOut:
+					UIManager.Instance.FadeInAndOut(
+						() =>
+						{
+							CharacterController cc = player.GetComponent<CharacterController>();
+							cc.enabled = false;
 
-                        if (audioSource && startTeleportSound)
-                            audioSource.PlayOneShot(startTeleportSound);
-                        break;
-                    }
-                case TransitionType.Instant: // 2
-                    {
-                        PerformTeleport(playerGO);
-                        break;
-                    }
-            }
-        }
+							Transform t = player.transform;
+							t.position = teleportationPoint.position;
+							t.eulerAngles = teleportationPoint.eulerAngles;
 
-        private void PerformTeleport(GameObject playerGO)
-        {
-            var cc = playerGO.GetComponent<CharacterController>();
-            if (cc == null) throw new NullReferenceException();
+							cc.enabled = true;
 
-            cc.enabled = false;
+							PlayerController.Instance.ResetRotationValues();
 
-            playerGO.transform.position = teleportationPoint.position;
-            playerGO.transform.eulerAngles = teleportationPoint.eulerAngles;
+							if (audioSource && startTeleportSound)
+								audioSource.PlayOneShot(startTeleportSound);
+						},
+						() =>
+						{
+							PlayerController pc = PlayerController.Instance;
+							pc.handleKeyboardInput = true;
+							pc.handleMouseInput = true;
+							Cursor.lockState = CursorLockMode.Locked;
 
-            cc.enabled = true;
+							if (audioSource && finishTeleportSound)
+								audioSource.PlayOneShot(finishTeleportSound);
+						}
+					);
+					break;
 
-            var pc = Leftovers.Player.PlayerController.Instance;
-            pc?.ResetRotationValues();
+				case TransitionType.FadeOut:
+					{
+						CharacterController cc = player.GetComponent<CharacterController>();
+						cc.enabled = false;
 
-            if (audioSource && startTeleportSound)
-                audioSource.PlayOneShot(startTeleportSound);
-        }
+						Transform t = player.transform;
+						t.position = teleportationPoint.position;
+						t.eulerAngles = teleportationPoint.eulerAngles;
 
-        private void FinishTeleport(Leftovers.Player.PlayerController player)
-        {
-            if (player == null) return;
+						cc.enabled = true;
 
-            player.handleKeyboardInput = true;
-            player.handleMouseInput = true;
-            Cursor.lockState = CursorLockMode.Locked;
+						PlayerController.Instance.ResetRotationValues();
 
-            if (audioSource && finishTeleportSound)
-                audioSource.PlayOneShot(finishTeleportSound);
-        }
-    }
+						if (audioSource && startTeleportSound)
+							audioSource.PlayOneShot(startTeleportSound);
 
-    public enum TransitionType
-    {
-        Fade = 0,
-        FadeOutInstant = 1,
-        Instant = 2
-    }
+						UIManager.Instance.FadeOut(() =>
+						{
+							PlayerController pc = PlayerController.Instance;
+							pc.handleKeyboardInput = true;
+							pc.handleMouseInput = true;
+							Cursor.lockState = CursorLockMode.Locked;
+
+							if (audioSource && finishTeleportSound)
+								audioSource.PlayOneShot(finishTeleportSound);
+						});
+					}
+					break;
+
+				case TransitionType.Instant:
+					{
+						CharacterController cc = player.GetComponent<CharacterController>();
+						cc.enabled = false;
+
+						Transform t = player.transform;
+						t.position = teleportationPoint.position;
+						t.eulerAngles = teleportationPoint.eulerAngles;
+
+						cc.enabled = true;
+
+						PlayerController.Instance.ResetRotationValues();
+					}
+					break;
+			}
+		}
+	}
 }
